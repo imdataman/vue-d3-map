@@ -9,19 +9,16 @@
 
 <script>
 import json from "@/assets/world.json";
-import * as geo from "d3-geo";
+import { geoPath, geoEqualEarth } from "d3-geo";
 import * as selection from "d3-selection";
 import * as zoom from "d3-zoom";
-import * as topojson from "topojson-client";
+import { feature } from "topojson-client";
 
 export default {
   name: "Map",
   data() {
     return {
-      myJson: topojson.feature(
-        json,
-        json.objects["ne_50m_admin_0_countries_lakes"]
-      ),
+      myJson: feature(json, json.objects["ne_50m_admin_0_countries_lakes"]),
       displayedCountry: "",
       width: 950,
       height: 550
@@ -29,12 +26,10 @@ export default {
   },
   computed: {
     projection() {
-      return geo
-        .geoEqualEarth()
-        .fitSize([this.width, this.height], this.myJson);
+      return geoEqualEarth().fitSize([this.width, this.height], this.myJson);
     },
     path() {
-      return geo.geoPath().projection(this.projection);
+      return geoPath().projection(this.projection);
     },
     g() {
       return selection.select(".pathGroup");
@@ -87,16 +82,16 @@ export default {
             .invert([this.width / 2, this.height / 2])
         );
     },
-    mouseentered(d, i, node) {
+    mouseentered(d, i, nodes) {
       this.displayedCountry = d.properties.NAME;
       selection
-        .select(node[i])
+        .select(nodes[i])
         .classed("active", true)
         .raise();
     },
-    mouseleft(d, i, node) {
+    mouseleft(d, i, nodes) {
       this.displayedCountry = "";
-      selection.select(node[i]).classed("active", false);
+      selection.select(nodes[i]).classed("active", false);
     }
   },
   mounted() {
@@ -109,8 +104,7 @@ export default {
       .on("mouseenter", this.mouseentered)
       .on("mouseleave", this.mouseleft)
       .on("click", this.clicked);
-    this.svg.on("click", this.reset);
-    this.svg.call(this.zoom);
+    this.svg.on("click", this.reset).call(this.zoom);
   }
 };
 </script>
